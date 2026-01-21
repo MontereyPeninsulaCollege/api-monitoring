@@ -13,3 +13,5 @@ class Endpoint:
     timeout_s: float = 30.0
     require_non_empty_body: bool = True
     needs_bearer_token: bool = True
+    include_response: bool = False
+    needs_basic_auth: bool = False

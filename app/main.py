@@ -6,7 +6,7 @@ from app.auth import require_basic_auth
 
 app = FastAPI(title="API Monitor POC")
 
-CHECK_INTERVAL_SECONDS = 60
+CHECK_INTERVAL_SECONDS = 120
 _last_run = 0.0
 
 
@@ -45,7 +45,7 @@ async def home(user: str = Depends(require_basic_auth)) -> str:
 </head>
 <body>
   <h2>API Monitor POC</h2>
-  <div class="muted">Tests endpoints every 30 seconds</div>
+  <div class="muted">Tests endpoints every 120 seconds</div>
   <p><button onclick="loadData()">Refresh now</button></p>
   <table>
     <thead>
@@ -82,9 +82,41 @@ async function loadData() {
           ${item.url}
         </div>
       </td>
-      <td>${item.status_code ?? ''}</td>
+      <td>
+        ${item.status_code ?? ''}
+        ${(item.status_code >= 400 && item.error_message) ? `<div class="muted" style="font-size:0.9em;white-space:pre-wrap;">${item.error_message}</div>` : ''}
+      </td>
       <td>${item.latency_ms ?? ''}</td>
-      <td>${item.body_len ?? ''}</td>
+      <td>
+        ${item.body_len ?? ''}
+        <div>
+          ${
+            (() => {
+              try {
+                const data = JSON.parse(item.response_body || "[]");
+                if (!Array.isArray(data) || !data.length) return "";
+                return data.map((outer, i) => `
+                  <details>
+                    <summary>Result List (${outer.result?.length ?? 0} items)</summary>
+                    ${
+                      Array.isArray(outer.result)
+                        ? outer.result.map((obj, idx) => `
+                          <details>
+                            <summary>${obj.eventName || "Item " + (idx + 1)}</summary>
+                            <pre style="white-space: pre-wrap; max-width: 400px;">${JSON.stringify(obj, null, 2)}</pre>
+                          </details>
+                        `).join("")
+                        : ""
+                    }
+                  </details>
+                `).join("");
+              } catch (e) {
+                return "";
+              }
+            })()
+          }
+        </div>
+      </td>
       <td>${item.ts ?? ''}</td>
       <td>${item.reason ?? ''}</td>
     `;
@@ -93,7 +125,7 @@ async function loadData() {
 }
 
 loadData();
-setInterval(loadData, 30000);
+setInterval(loadData, 120000);
 </script>
 </body>
 </html>

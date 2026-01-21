@@ -2,7 +2,7 @@ import time
 import httpx
 from typing import Any
 from app.structures import Endpoint
-from app.ellucianHelpers import get_api_token, ETHOS_ACCEPT, build_request_url
+from app.ellucianHelpers import get_api_token, ETHOS_ACCEPT, build_request_url, encode_basic_auth
 from app.endpoints import ENDPOINTS
 
 
@@ -26,7 +26,8 @@ async def check_endpoint(client: httpx.AsyncClient, ep: Endpoint) -> dict[str, A
     headers = {"Accept": ETHOS_ACCEPT}
     if ep.needs_bearer_token:
         headers["Authorization"] = f"Bearer {await get_api_token(client)}"
-
+    if ep.needs_basic_auth:
+        headers["Authorization"] = encode_basic_auth()
     try:
         resp = await client.request(
             ep.method,
@@ -38,12 +39,24 @@ async def check_endpoint(client: httpx.AsyncClient, ep: Endpoint) -> dict[str, A
         result["request"] = {"method": ep.method, "url": str(resp.request.url)}
         result["status_code"] = resp.status_code
         result["latency_ms"] = int((time.perf_counter() - t0) * 1000)
-
+        if ep.include_response:
+            print(resp.text[0])
+            result["response_body"] = resp.text
         body = resp.text or ""
         result["body_len"] = len(body)
 
         if resp.status_code < 200 or resp.status_code >= 300:
             result["reason"] = f"HTTP {resp.status_code}"
+            # For 400+ responses, try to include error message as subtext
+            if resp.status_code >= 400:
+                # Try to parse JSON error, else use text
+                try:
+                    err_json = resp.json()
+                    # Use a common error message key if present
+                    err_msg = err_json.get("detail") or err_json.get("message") or str(err_json)
+                except Exception:
+                    err_msg = body
+                result["error_message"] = err_msg
             return result
 
         result["ok"] = True
