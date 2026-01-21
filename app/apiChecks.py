@@ -47,13 +47,11 @@ async def check_endpoint(client: httpx.AsyncClient, ep: Endpoint) -> dict[str, A
 
         if resp.status_code < 200 or resp.status_code >= 300:
             result["reason"] = f"HTTP {resp.status_code}"
-            # For 400+ responses, try to include error message as subtext
             if resp.status_code >= 400:
-                # Try to parse JSON error, else use text
                 try:
                     err_json = resp.json()
-                    # Use a common error message key if present
-                    err_msg = err_json.get("detail") or err_json.get("message") or str(err_json)
+                    err_msg = err_json.get("detail") or err_json.get(
+                        "message") or str(err_json)
                 except Exception:
                     err_msg = body
                 result["error_message"] = err_msg
