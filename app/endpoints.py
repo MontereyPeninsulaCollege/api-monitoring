@@ -1,5 +1,9 @@
 from app.structures import Endpoint
 from datetime import datetime, timedelta
+import os
+
+BANNER_ID = os.environ["BANNER_ID"]
+BANNER_GUID = os.environ["BANNER_GUID"]
 
 ENDPOINTS: list[Endpoint] = [
     Endpoint(
@@ -8,7 +12,7 @@ ENDPOINTS: list[Endpoint] = [
         params={
             "criteria": {
                 "credentials": [
-                    {"type": "bannerId", "value": "M00251282"}
+                    {"type": "bannerId", "value": BANNER_ID}
                 ]
             }
         },
@@ -18,7 +22,7 @@ ENDPOINTS: list[Endpoint] = [
     Endpoint(
         name="User Identity Profile from GUID",
         url="https://integrate.elluciancloud.com/api/user-identity-profiles",
-        path_suffix="/88710f32-8ed6-4ad7-ad02-2458fdd0640f",
+        path_suffix=f"/{BANNER_GUID}",
         needs_bearer_token=True,
         include_response=False
     ),
@@ -29,8 +33,8 @@ ENDPOINTS: list[Endpoint] = [
         include_response=True,
         needs_basic_auth=True,
         params={
-            "fromDate": (datetime.now() - timedelta(days=3)).strftime("%m/%d/%Y %H:%M:%S"),
-            "toDate": datetime.now().strftime("%m/%d/%Y %H:%M:%S"),
+            "fromDate": (datetime.now()).strftime("%m/%d/%Y %H:%M:%S"),
+            "toDate": (datetime.now() - timedelta(days=7)).strftime("%m/%d/%Y %H:%M:%S")
         },
     ),
     Endpoint(
