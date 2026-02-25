@@ -14,7 +14,7 @@ python -m venv .venv
 pip install -r requirements.txt
 
 ### Configure environment variables
-Copy .env.example to .env
+Copy .env.example to .env  
 Fill in your API keys and credentials.  
 
 ### Run the server 
