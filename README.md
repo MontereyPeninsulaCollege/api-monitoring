@@ -25,6 +25,11 @@ Fill in your API keys and credentials.
 import dotenv
 dotenv.load_dotenv()
 ```
+and all the env calls need to be changed from   
+`DASH_USER = os.environ["DASH_USER"]`  
+to   
+`DASH_USER = os.getenv("DASH_USER")`  
+
 
 
 ### Access the app
